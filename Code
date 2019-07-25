@@ -1,0 +1,182 @@
+#Insert Libraries 
+
+import numpy as np 
+import pandas as pd 
+import seaborn as sns 
+import matplotlib.pyplot as plt 
+%matplotlib inline  
+
+#Insert Data 
+
+train = pd.read_csv('train.csv')
+train.head()
+
+test = pd.read_csv('test.csv')
+test.head()
+
+#Exploratory Data Analysis
+
+train.shape
+train.info()
+train.describe()
+
+##Missing data
+
+train.isnull().sum()
+sns.heatmap(train.isnull(), yticklabels=False, cbar=False, cmap='viridis')
+sns.heatmap(train.corr(), annot=True)
+
+sns.set_style('whitegrid')
+train.columns
+
+## Survived 
+
+train.Survived.valu_counts(
+sns.countplot(x='Survived', data=train)
+
+## Sex
+
+sns.countplot(x='Sex', data=train)
+sex_pivot = train.pivot_table(index='Sex', values='Survived')
+sex_pivot
+sex_pivot.plot.bar()
+sns.countplot(x='Survived', hue='Sex', data=train)
+
+## Pclass
+
+pclass_pivot = train.pivot_table(index='Pclass', values='Survived')
+pclass_pivot
+pclass_pivot.plot.bar()
+sns.countplot(x='Survived', hue='Pclass', data=train)
+
+## SibSp
+
+train.SibSp.value_counts()
+SibSp_pivot = train.pivot_table(index='SibSp', values='Survived')
+SibSp_pivot
+SibSp_pivot.plot.bar()
+sns.countplot(x='SibSp', data=train)
+
+##Age 
+
+Survived = train[train['Survived'] == 1]
+Died = train[train['Survived']==0]
+
+Died.Age.plot.hist(bins=30, color = 'black', alpha=0.9)
+Survived.Age.plot.hist(bins=30, color='orange', alpha=0.7)
+
+plt.legend(['Died','Survived'])
+plt.show()
+
+sns.distplot(train.Age.dropna(), kde=False, bins=30, color='darkred')
+
+##Fare 
+
+plt.figure(figsize=(10,5))
+Survived = train[train['Survived'] == 1]
+Died = train[train['Survived']==0]
+
+Died.Fare.plot.hist(bins=30, color = 'black', alpha=0.9)
+Survived.Fare.plot.hist(bins=30, color= 'orange', alpha = 0.6)
+plt.legend(['Died','Survived'])
+plt.show()
+
+plt.figure(figsize=(10,5))
+sns.distplot(train.Fare, kde=False, color='green', bins=30)
+
+
+pd.get_dummies(train, columns = ['Sex', 'Embarked'], drop_first=True)
+male= pd.get_dummies(train, columns = ['Sex', 'Embarked'], drop_first=True)
+male.Sex_male.value_counts()
+sns.countplot(x='Sex_male', data=male)
+# 0 = Female
+# 1 = Male
+
+#Data Cleaning
+plt.figure(figsize=(10,5))
+sns.boxplot(x='Pclass', y='Age', data=train)
+
+def impute_age(cols):
+    Age = cols[0]
+    Pclass = cols[1]
+    
+    if pd.isnull(Age):
+        
+        if Pclass == 1:
+            return 37
+        
+        elif Pclass == 2:
+            return 29
+        
+        else:
+            return 24
+        
+    else:
+        return Age
+
+
+train.Age = train[['Age','Pclass']].apply(impute_age, axis=1)
+train.Age.isnull().sum()
+sns.heatmap(train.isnull(), yticklabels=False, cbar=False, cmap='viridis') 
+
+train.drop('Cabin', axis=1, inplace=True)
+train.head()
+train.dropna(inplace=True)
+sns.heatmap(train.isnull(), yticklabels=False, cbar=False, cmap='viridis')
+
+## dummies 
+train=pd.get_dummies(train, columns=['Sex', 'Embarked'], drop_first=True)
+train.head()
+train.drop(['Name', 'Ticket'], axis=1, inplace=True)
+train.head()
+
+#Building a Logistic Regression Model
+
+##Train Test Split 
+from sklearn.model_selection import train_test_split
+y=train.Survived
+y.head()
+
+X=train[['PassengerId','Pclass','Age','SibSp','Parch','Fare','Sex_male','Embarked_Q','Embarked_S']]
+X.head()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=101)
+
+#Training and Predicting
+
+from sklearn.linear_model import LogisticRegression
+logmodel = LogisticRegression()
+logmodel.fit(X_train, y_train)
+predictions = logmodel.predict(X_test)
+predictions
+
+## Evaluation 
+
+from sklearn.metrics import classification_report
+print(classification_report(y_test, predictions))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
